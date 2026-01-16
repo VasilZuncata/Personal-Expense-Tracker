@@ -13,8 +13,8 @@ This project was developed as a team-based Java application and focuses on clean
 - Automatically calculate:
   - Total expenses
   - Average expense
-  - Save and Load expense
 - Input validation for incorrect values
+- Save and Load expenses
 - Graphical desktop interface (no terminal)
 
 ---
