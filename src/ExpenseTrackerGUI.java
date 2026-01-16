@@ -1,8 +1,10 @@
 import java.awt.*;
+import java.io.*;
 import java.util.ArrayList;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
-class Expense {
+class Expense implements Serializable {
     String category;
     double amount;
     String note;
@@ -35,14 +37,14 @@ public class ExpenseTrackerGUI extends JFrame {
 
     public ExpenseTrackerGUI() {
         setTitle("Personal Expense Tracker");
-        setSize(500, 400);
+        setSize(500, 500);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         setLayout(new BorderLayout());
 
         // === TOP PANEL ===
-        JPanel inputPanel = new JPanel(new GridLayout(4, 2, 5, 5));
+        JPanel inputPanel = new JPanel(new GridLayout(5, 2, 5, 5));
         inputPanel.setBorder(BorderFactory.createTitledBorder("Add Expense"));
 
         inputPanel.add(new JLabel("Category:"));
@@ -56,9 +58,13 @@ public class ExpenseTrackerGUI extends JFrame {
 
         JButton addButton = new JButton("Add Expense");
         JButton deleteButton = new JButton("Delete Selected");
+        JButton saveButton = new JButton("Save Expenses");
+        JButton loadButton = new JButton("Load Expenses");
 
         inputPanel.add(addButton);
         inputPanel.add(deleteButton);
+        inputPanel.add(saveButton);
+        inputPanel.add(loadButton);
 
         // === CENTER PANEL ===
         JScrollPane scrollPane = new JScrollPane(expenseList);
@@ -76,6 +82,8 @@ public class ExpenseTrackerGUI extends JFrame {
         // === ACTIONS ===
         addButton.addActionListener(e -> addExpense());
         deleteButton.addActionListener(e -> deleteExpense());
+        saveButton.addActionListener(e -> saveExpenses());
+        loadButton.addActionListener(e -> loadExpenses());
     }
 
     private void addExpense() {
@@ -117,6 +125,56 @@ public class ExpenseTrackerGUI extends JFrame {
         expenses.remove(index);
         listModel.remove(index);
         updateStats();
+    }
+
+    private void saveExpenses() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Expense Files (*.exp)", "exp");
+        fileChooser.setFileFilter(filter);
+
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (!file.getName().endsWith(".exp")) {
+                file = new File(file.getAbsolutePath() + ".exp");
+            }
+
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                oos.writeObject(expenses);
+                JOptionPane.showMessageDialog(this, "Expenses saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error saving file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void loadExpenses() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Expense Files (*.exp)", "exp");
+        fileChooser.setFileFilter(filter);
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                @SuppressWarnings("unchecked")
+                ArrayList<Expense> loadedExpenses = (ArrayList<Expense>) ois.readObject();
+                
+                expenses.clear();
+                listModel.clear();
+                expenses.addAll(loadedExpenses);
+                
+                for (Expense expense : loadedExpenses) {
+                    listModel.addElement(expense);
+                }
+                
+                updateStats();
+                JOptionPane.showMessageDialog(this, "Expenses loaded successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException | ClassNotFoundException e) {
+                JOptionPane.showMessageDialog(this, "Error loading file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void updateStats() {
