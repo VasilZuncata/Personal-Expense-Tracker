@@ -9,6 +9,13 @@
             "name": "ExpenseTrackerGUI",
             "request": "launch",
             "mainClass": "ExpenseTrackerGUI",
+            "projectName": "java_a69cefb1"
+        },
+        {
+            "type": "java",
+            "name": "ExpenseTrackerGUI",
+            "request": "launch",
+            "mainClass": "ExpenseTrackerGUI",
             "projectName": "Personal-Expense-Tracker_c6efbdb7"
         },
         {
