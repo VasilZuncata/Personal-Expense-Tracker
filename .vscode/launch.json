@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "java",
+            "name": "ExpenseTrackerGUI",
+            "request": "launch",
+            "mainClass": "ExpenseTrackerGUI",
+            "projectName": "Personal-Expense-Tracker_c6efbdb7"
+        },
+        {
             "type": "jdk",
             "request": "launch",
             "name": "Launch Java App"
