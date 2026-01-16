@@ -10,17 +10,20 @@ public class CategorySummaryPanel extends JPanel {
     private JList<String> list = new JList<>(model);
 
     public CategorySummaryPanel(ArrayList<Expense> expenses) {
-        setLayout(new BorderLayout(14, 14));
-        setBorder(new EmptyBorder(10, 10, 10, 10));
+        setLayout(new BorderLayout(16, 16));
+        setBorder(new EmptyBorder(16, 16, 16, 16));
 
         JPanel card = new JPanel(new BorderLayout());
-        card.setBorder(createCardBorder("Category Summary"));
+        card.setBorder(new TitledBorder(
+                new LineBorder(new Color(120, 120, 120, 60), 1, true),
+                "Category Summary",
+                TitledBorder.LEADING,
+                TitledBorder.TOP,
+                getFont().deriveFont(Font.BOLD)
+        ));
 
+        list.setFixedCellHeight(38);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setFixedCellHeight(32);
-        list.setBorder(new EmptyBorder(6, 6, 6, 6));
-
-        // UI-only: nicer padding per row
         list.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(
@@ -28,7 +31,7 @@ public class CategorySummaryPanel extends JPanel {
                     boolean isSelected, boolean cellHasFocus
             ) {
                 JLabel c = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                c.setBorder(new EmptyBorder(6, 10, 6, 10));
+                c.setBorder(new EmptyBorder(6, 12, 6, 12));
                 return c;
             }
         });
@@ -51,21 +54,12 @@ public class CategorySummaryPanel extends JPanel {
         }
 
         if (map.isEmpty()) {
-            model.addElement("No expenses yet. Add some in the Expenses tab.");
+            model.addElement("No expenses yet.");
             return;
         }
 
         for (String key : map.keySet()) {
             model.addElement(key + ": " + String.format("%.2f", map.get(key)));
         }
-    }
-
-    private static Border createCardBorder(String title) {
-        Border outer = new LineBorder(new Color(210, 210, 210), 1, true);
-        Border inner = new EmptyBorder(8, 10, 10, 10);
-        TitledBorder titled = BorderFactory.createTitledBorder(outer, title);
-        titled.setTitleFont(UIManager.getFont("Label.font").deriveFont(Font.BOLD));
-        titled.setTitleColor(new Color(70, 70, 70));
-        return new CompoundBorder(titled, inner);
     }
 }

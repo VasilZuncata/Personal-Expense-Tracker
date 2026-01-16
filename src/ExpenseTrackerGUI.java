@@ -1,9 +1,15 @@
-import java.awt.*;
-import java.util.ArrayList;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+
 import javax.swing.*;
 import javax.swing.border.*;
+import java.awt.*;
+import java.util.ArrayList;
 
 public class ExpenseTrackerGUI extends JFrame {
+
+    // ---- THEME STATE (UI only) ----
+    private static boolean darkMode = true;
 
     private ArrayList<Expense> expenses = new ArrayList<>();
     private DefaultListModel<Expense> listModel = new DefaultListModel<>();
@@ -18,206 +24,207 @@ public class ExpenseTrackerGUI extends JFrame {
     private JList<Expense> expenseList = new JList<>(listModel);
     private CategorySummaryPanel categoryPanel;
 
+    // Theme toggle button
+    private JToggleButton themeToggle = new JToggleButton();
+
     public ExpenseTrackerGUI() {
-        // ---- UI ONLY: Nimbus + tuned defaults ----
-        setNimbusLookAndDefaults();
+        // Set theme before components
+        applyTheme(darkMode);
 
-        setTitle("Personal Expense Tracker");
+        setTitle("Expense Tracker");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-
-        // Fixed size (no fullscreen / no resize)
-        setSize(820, 560);
+        setSize(920, 610);
         setResizable(false);
         setLocationRelativeTo(null);
 
-        // Root container with padding
-        JPanel root = new JPanel(new BorderLayout(14, 14));
-        root.setBorder(new EmptyBorder(14, 14, 14, 14));
+        JPanel root = new JPanel(new BorderLayout(16, 16));
+        root.setBorder(new EmptyBorder(16, 16, 16, 16));
         setContentPane(root);
 
-        // Tabs
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.setBorder(new EmptyBorder(2, 2, 2, 2));
+        // -------- Header (title + theme toggle) --------
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBorder(new EmptyBorder(0, 2, 0, 2));
 
-        // ===== EXPENSES TAB =====
-        JPanel expensesTab = new JPanel(new BorderLayout(14, 14));
-        expensesTab.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JLabel title = new JLabel("Personal Expense Tracker");
+        title.setFont(title.getFont().deriveFont(Font.BOLD, title.getFont().getSize() + 6f));
+        header.add(title, BorderLayout.WEST);
 
-        // --- Top: Add Expense card ---
-        JPanel formCard = new JPanel(new BorderLayout());
-        formCard.setBorder(createCardBorder("Add Expense"));
-
-        JPanel form = new JPanel(new GridBagLayout());
-        form.setBorder(new EmptyBorder(12, 12, 6, 12));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel catLbl = new JLabel("Category:");
-        JLabel amtLbl = new JLabel("Amount:");
-        JLabel noteLbl = new JLabel("Note:");
-
-        catLbl.setHorizontalAlignment(SwingConstants.RIGHT);
-        amtLbl.setHorizontalAlignment(SwingConstants.RIGHT);
-        noteLbl.setHorizontalAlignment(SwingConstants.RIGHT);
-
-        categoryField.setColumns(18);
-        amountField.setColumns(18);
-        noteField.setColumns(18);
-
-        // Row 0
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        form.add(catLbl, gbc);
-        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1;
-        form.add(categoryField, gbc);
-
-        // Row 1
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        form.add(amtLbl, gbc);
-        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1;
-        form.add(amountField, gbc);
-
-        // Row 2
-        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
-        form.add(noteLbl, gbc);
-        gbc.gridx = 1; gbc.gridy = 2; gbc.weightx = 1;
-        form.add(noteField, gbc);
-
-        // Buttons (same actions, better layout)
-        JButton addBtn = new JButton("Add");
-        JButton delBtn = new JButton("Delete");
-        JButton saveBtn = new JButton("Save");
-        JButton loadBtn = new JButton("Load");
-
-        styleButton(addBtn, true);
-        styleButton(delBtn, false);
-        styleButton(saveBtn, false);
-        styleButton(loadBtn, false);
-
-        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        buttonRow.setBorder(new EmptyBorder(0, 12, 12, 12));
-        buttonRow.add(addBtn);
-        buttonRow.add(delBtn);
-        buttonRow.add(saveBtn);
-        buttonRow.add(loadBtn);
-
-        formCard.add(form, BorderLayout.CENTER);
-        formCard.add(buttonRow, BorderLayout.SOUTH);
-
-        expensesTab.add(formCard, BorderLayout.NORTH);
-
-        // --- Center: Expenses list card ---
-        JPanel listCard = new JPanel(new BorderLayout());
-        listCard.setBorder(createCardBorder("Expenses"));
-
-        expenseList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        expenseList.setFixedCellHeight(32);
-        expenseList.setBorder(new EmptyBorder(6, 6, 6, 6));
-
-        // UI-only: nicer list row padding
-        expenseList.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<?> list, Object value, int index,
-                    boolean isSelected, boolean cellHasFocus
-            ) {
-                JLabel c = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                c.setBorder(new EmptyBorder(6, 10, 6, 10));
-                return c;
-            }
+        themeToggle.setSelected(darkMode);
+        updateToggleText();
+        themeToggle.setFocusPainted(false);
+        themeToggle.setPreferredSize(new Dimension(160, 36));
+        themeToggle.addActionListener(e -> {
+            darkMode = themeToggle.isSelected();
+            updateToggleText();
+            switchTheme(darkMode);
         });
 
-        JScrollPane listScroll = new JScrollPane(expenseList);
-        listScroll.setBorder(new EmptyBorder(12, 12, 12, 12));
-        listCard.add(listScroll, BorderLayout.CENTER);
+        JPanel headerRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        headerRight.add(themeToggle);
+        header.add(headerRight, BorderLayout.EAST);
 
-        expensesTab.add(listCard, BorderLayout.CENTER);
+        root.add(header, BorderLayout.NORTH);
 
-        // --- Bottom: status bar style stats ---
-        JPanel statsBar = new JPanel(new BorderLayout());
-        statsBar.setBorder(new CompoundBorder(
-                new MatteBorder(1, 0, 0, 0, new Color(210, 210, 210)),
-                new EmptyBorder(10, 12, 10, 12)
+        // -------- Tabs --------
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.setBorder(null);
+
+        // ===================== EXPENSES TAB =====================
+        JPanel expensesTab = new JPanel(new BorderLayout(16, 16));
+
+        // Add Expense card
+        JPanel addCard = card("Add Expense");
+        addCard.setLayout(new BorderLayout());
+        addCard.setBorder(new EmptyBorder(24, 0, 16, 0));
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(16, 16, 8, 16));
+
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets = new Insets(8, 8, 8, 8);
+        g.fill = GridBagConstraints.HORIZONTAL;
+
+        addField(form, g, "Category", categoryField, 0);
+        addField(form, g, "Amount", amountField, 1);
+        addField(form, g, "Note", noteField, 2);
+
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        actions.setBorder(new EmptyBorder(0, 16, 16, 16));
+
+        JButton addBtn = primaryButton("Add");
+        JButton delBtn = normalButton("Delete");
+        JButton saveBtn = normalButton("Save");
+        JButton loadBtn = normalButton("Load");
+
+        actions.add(addBtn);
+        actions.add(delBtn);
+        actions.add(saveBtn);
+        actions.add(loadBtn);
+
+        addCard.add(form, BorderLayout.CENTER);
+        addCard.add(actions, BorderLayout.SOUTH);
+
+     
+        JPanel listCard = card("Expenses");
+        listCard.setLayout(new BorderLayout());
+
+        expenseList.setFixedCellHeight(38);
+        expenseList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        expenseList.setCellRenderer(new ModernListRenderer());
+
+        JScrollPane scroll = new JScrollPane(expenseList);
+        scroll.setBorder(new EmptyBorder(12, 12, 12, 12));
+        listCard.add(scroll, BorderLayout.CENTER);
+
+        
+        JPanel status = new JPanel(new BorderLayout());
+        status.setBorder(new CompoundBorder(
+                new MatteBorder(1, 0, 0, 0, new Color(80, 80, 80, 60)),
+                new EmptyBorder(10, 14, 10, 14)
         ));
 
-        Font statsFont = totalLabel.getFont().deriveFont(Font.BOLD, totalLabel.getFont().getSize() + 1f);
-        totalLabel.setFont(statsFont);
-        averageLabel.setFont(statsFont);
+        totalLabel.setFont(totalLabel.getFont().deriveFont(Font.BOLD));
+        averageLabel.setFont(averageLabel.getFont().deriveFont(Font.BOLD));
 
-        statsBar.add(totalLabel, BorderLayout.WEST);
-        statsBar.add(averageLabel, BorderLayout.EAST);
+        status.add(totalLabel, BorderLayout.WEST);
+        status.add(averageLabel, BorderLayout.EAST);
 
-        expensesTab.add(statsBar, BorderLayout.SOUTH);
+        expensesTab.add(addCard, BorderLayout.NORTH);
+        expensesTab.add(listCard, BorderLayout.CENTER);
+        expensesTab.add(status, BorderLayout.SOUTH);
 
         tabs.addTab("Expenses", expensesTab);
 
-        // ===== CATEGORY SUMMARY TAB =====
+        // ===================== CATEGORY TAB =====================
         categoryPanel = new CategorySummaryPanel(expenses);
-
-        // wrap with padding so it matches the rest
-        JPanel categoryWrapper = new JPanel(new BorderLayout());
-        categoryWrapper.setBorder(new EmptyBorder(10, 10, 10, 10));
-        categoryWrapper.add(categoryPanel, BorderLayout.CENTER);
-
-        tabs.addTab("Category Summary", categoryWrapper);
+        tabs.addTab("Category Summary", categoryPanel);
 
         root.add(tabs, BorderLayout.CENTER);
 
-        // ===== ACTIONS (UNCHANGED) =====
+        // ===================== ACTIONS (UNCHANGED) =====================
         addBtn.addActionListener(e -> addExpense());
         delBtn.addActionListener(e -> deleteExpense());
         saveBtn.addActionListener(e -> ExpenseStorage.save(expenses, this));
         loadBtn.addActionListener(e -> loadExpenses());
     }
 
-    // ---------------- UI helpers (UI only) ----------------
+    // ---------------- THEME METHODS (UI only) ----------------
 
-    private static void setNimbusLookAndDefaults() {
+    private void updateToggleText() {
+        themeToggle.setText(darkMode ? "Dark Mode: ON" : "Dark Mode: OFF");
+    }
+
+    private static void applyTheme(boolean dark) {
         try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
+            if (dark) {
+                FlatDarculaLaf.setup();
+            } else {
+                FlatLightLaf.setup();
             }
+
+           
+            UIManager.put("Button.arc", 14);
+            UIManager.put("Component.arc", 14);
+            UIManager.put("TextComponent.arc", 12);
+            UIManager.put("ScrollBar.width", 12);
+            UIManager.put("TabbedPane.tabInsets", new Insets(10, 16, 10, 16));
         } catch (Exception ignored) {}
-
-        // Slightly cleaner overall typography (still Nimbus)
-        Font base = UIManager.getFont("Label.font");
-        if (base != null) {
-            Font ui = base.deriveFont(base.getSize2D() + 1f);
-            UIManager.put("Label.font", ui);
-            UIManager.put("Button.font", ui);
-            UIManager.put("TextField.font", ui);
-            UIManager.put("List.font", ui);
-            UIManager.put("TabbedPane.font", ui);
-        }
-
-        // Nudge some spacing defaults
-        UIManager.put("TabbedPane.tabInsets", new Insets(10, 16, 10, 16));
     }
 
-    private static Border createCardBorder(String title) {
-        Border outer = new LineBorder(new Color(210, 210, 210), 1, true);
-        Border inner = new EmptyBorder(8, 10, 10, 10);
-        TitledBorder titled = BorderFactory.createTitledBorder(outer, title);
-        titled.setTitleFont(UIManager.getFont("Label.font").deriveFont(Font.BOLD));
-        titled.setTitleColor(new Color(70, 70, 70));
-        return new CompoundBorder(titled, inner);
+    private void switchTheme(boolean dark) {
+        applyTheme(dark);
+
+     
+        SwingUtilities.updateComponentTreeUI(this);
+
+       
+        invalidate();
+        validate();
+        repaint();
     }
 
-    private static void styleButton(JButton b, boolean primary) {
+    // ---------------- UI HELPERS ----------------
+
+    private static JPanel card(String title) {
+        JPanel p = new JPanel();
+        p.setBorder(new TitledBorder(
+                new LineBorder(new Color(120, 120, 120, 60), 1, true),
+                title,
+                TitledBorder.LEADING,
+                TitledBorder.TOP,
+                p.getFont().deriveFont(Font.BOLD)
+        ));
+        return p;
+    }
+
+    private static JButton primaryButton(String text) {
+        JButton b = new JButton(text);
+        b.setPreferredSize(new Dimension(120, 38));
+        b.setFont(b.getFont().deriveFont(Font.BOLD));
         b.setFocusPainted(false);
-        b.setPreferredSize(new Dimension(110, 34));
-
-        // UI-only: give the primary button a subtle emphasis using font weight
-        if (primary) {
-            b.setFont(b.getFont().deriveFont(Font.BOLD));
-        }
+        return b;
     }
 
-    // ---------------- Existing logic (UNCHANGED) ----------------
+    private static JButton normalButton(String text) {
+        JButton b = new JButton(text);
+        b.setPreferredSize(new Dimension(120, 38));
+        b.setFocusPainted(false);
+        return b;
+    }
+
+    private static void addField(JPanel panel, GridBagConstraints g, String label, JTextField field, int row) {
+        g.gridx = 0;
+        g.gridy = row;
+        g.weightx = 0;
+        panel.add(new JLabel(label), g);
+
+        g.gridx = 1;
+        g.gridy = row;
+        g.weightx = 1;
+        panel.add(field, g);
+    }
+
+    // ---------------- LOGIC (UNCHANGED) ----------------
 
     private void addExpense() {
         try {
@@ -277,6 +284,20 @@ public class ExpenseTrackerGUI extends JFrame {
     }
 
     public static void main(String[] args) {
+        applyTheme(darkMode);
         SwingUtilities.invokeLater(() -> new ExpenseTrackerGUI().setVisible(true));
+    }
+
+    // ---------------- MODERN LIST RENDERER ----------------
+    private static class ModernListRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(
+                JList<?> list, Object value, int index,
+                boolean isSelected, boolean cellHasFocus
+        ) {
+            JLabel c = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            c.setBorder(new EmptyBorder(6, 12, 6, 12));
+            return c;
+        }
     }
 }

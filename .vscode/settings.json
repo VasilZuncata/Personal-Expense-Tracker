@@ -1,7 +1,10 @@
 {
-    "java.project.sourcePaths": ["src"],
+    "java.project.sourcePaths": [
+        "src"
+    ],
     "java.project.outputPath": "bin",
     "java.project.referencedLibraries": [
-        "lib/**/*.jar"
+        "lib\\flatlaf-3.7.jar",
+        "c:\\Users\\Тодор\\Documents\\GitHub\\Personal-Expense-Tracker\\lib\\flatlaf-3.7.jar"
     ]
 }
