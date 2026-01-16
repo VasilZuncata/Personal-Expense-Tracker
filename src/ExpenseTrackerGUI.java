@@ -1,25 +1,6 @@
 import java.awt.*;
-import java.io.*;
 import java.util.ArrayList;
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-class Expense implements Serializable {
-    String category;
-    double amount;
-    String note;
-
-    Expense(String category, double amount, String note) {
-        this.category = category;
-        this.amount = amount;
-        this.note = note;
-    }
-
-    @Override
-    public String toString() {
-        return category + " - " + amount + " (" + note + ")";
-    }
-}
 
 public class ExpenseTrackerGUI extends JFrame {
 
@@ -34,146 +15,102 @@ public class ExpenseTrackerGUI extends JFrame {
     private JLabel averageLabel = new JLabel("Average: 0.00");
 
     private JList<Expense> expenseList = new JList<>(listModel);
+    private CategorySummaryPanel categoryPanel;
 
     public ExpenseTrackerGUI() {
         setTitle("Personal Expense Tracker");
-        setSize(500, 500);
+        setSize(600, 500);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        setLayout(new BorderLayout());
+        JTabbedPane tabs = new JTabbedPane();
 
-        // === TOP PANEL ===
+        // ===== EXPENSES TAB =====
+        JPanel expensesTab = new JPanel(new BorderLayout());
+
         JPanel inputPanel = new JPanel(new GridLayout(5, 2, 5, 5));
         inputPanel.setBorder(BorderFactory.createTitledBorder("Add Expense"));
 
         inputPanel.add(new JLabel("Category:"));
         inputPanel.add(categoryField);
-
         inputPanel.add(new JLabel("Amount:"));
         inputPanel.add(amountField);
-
         inputPanel.add(new JLabel("Note:"));
         inputPanel.add(noteField);
 
-        JButton addButton = new JButton("Add Expense");
-        JButton deleteButton = new JButton("Delete Selected");
-        JButton saveButton = new JButton("Save Expenses");
-        JButton loadButton = new JButton("Load Expenses");
+        JButton addBtn = new JButton("Add");
+        JButton delBtn = new JButton("Delete");
+        JButton saveBtn = new JButton("Save");
+        JButton loadBtn = new JButton("Load");
 
-        inputPanel.add(addButton);
-        inputPanel.add(deleteButton);
-        inputPanel.add(saveButton);
-        inputPanel.add(loadButton);
+        inputPanel.add(addBtn);
+        inputPanel.add(delBtn);
+        inputPanel.add(saveBtn);
+        inputPanel.add(loadBtn);
 
-        // === CENTER PANEL ===
-        JScrollPane scrollPane = new JScrollPane(expenseList);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Expenses"));
+        expensesTab.add(inputPanel, BorderLayout.NORTH);
+        expensesTab.add(new JScrollPane(expenseList), BorderLayout.CENTER);
 
-        // === BOTTOM PANEL ===
         JPanel statsPanel = new JPanel(new GridLayout(1, 2));
         statsPanel.add(totalLabel);
         statsPanel.add(averageLabel);
 
-        add(inputPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
-        add(statsPanel, BorderLayout.SOUTH);
+        expensesTab.add(statsPanel, BorderLayout.SOUTH);
+        tabs.addTab("Expenses", expensesTab);
 
-        // === ACTIONS ===
-        addButton.addActionListener(e -> addExpense());
-        deleteButton.addActionListener(e -> deleteExpense());
-        saveButton.addActionListener(e -> saveExpenses());
-        loadButton.addActionListener(e -> loadExpenses());
+        // ===== CATEGORY SUMMARY TAB =====
+        categoryPanel = new CategorySummaryPanel(expenses);
+        tabs.addTab("Category Summary", categoryPanel);
+
+        add(tabs);
+
+        // ===== ACTIONS =====
+        addBtn.addActionListener(e -> addExpense());
+        delBtn.addActionListener(e -> deleteExpense());
+        saveBtn.addActionListener(e -> ExpenseStorage.save(expenses, this));
+        loadBtn.addActionListener(e -> loadExpenses());
     }
 
     private void addExpense() {
-        String category = categoryField.getText();
-        String note = noteField.getText();
-
-        double amount;
         try {
-            amount = Double.parseDouble(amountField.getText());
+            double amount = Double.parseDouble(amountField.getText());
             if (amount <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Invalid amount!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+
+            Expense e = new Expense(categoryField.getText(), amount, noteField.getText());
+            expenses.add(e);
+            listModel.addElement(e);
+
+            categoryField.setText("");
+            amountField.setText("");
+            noteField.setText("");
+
+            updateStats();
+            categoryPanel.updateSummary(expenses);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Invalid input!", "Error", JOptionPane.ERROR_MESSAGE);
         }
-
-        if (category.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Category cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        Expense expense = new Expense(category, amount, note);
-        expenses.add(expense);
-        listModel.addElement(expense);
-
-        categoryField.setText("");
-        amountField.setText("");
-        noteField.setText("");
-
-        updateStats();
     }
 
     private void deleteExpense() {
-        int index = expenseList.getSelectedIndex();
-        if (index == -1) {
-            JOptionPane.showMessageDialog(this, "Select an expense to delete.", "Warning", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        expenses.remove(index);
-        listModel.remove(index);
-        updateStats();
-    }
-
-    private void saveExpenses() {
-        JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Expense Files (*.exp)", "exp");
-        fileChooser.setFileFilter(filter);
-
-        int result = fileChooser.showSaveDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            if (!file.getName().endsWith(".exp")) {
-                file = new File(file.getAbsolutePath() + ".exp");
-            }
-
-            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
-                oos.writeObject(expenses);
-                JOptionPane.showMessageDialog(this, "Expenses saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error saving file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        int i = expenseList.getSelectedIndex();
+        if (i != -1) {
+            expenses.remove(i);
+            listModel.remove(i);
+            updateStats();
+            categoryPanel.updateSummary(expenses);
         }
     }
 
     private void loadExpenses() {
-        JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter filter = new FileNameExtensionFilter("Expense Files (*.exp)", "exp");
-        fileChooser.setFileFilter(filter);
-
-        int result = fileChooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                @SuppressWarnings("unchecked")
-                ArrayList<Expense> loadedExpenses = (ArrayList<Expense>) ois.readObject();
-                
-                expenses.clear();
-                listModel.clear();
-                expenses.addAll(loadedExpenses);
-                
-                for (Expense expense : loadedExpenses) {
-                    listModel.addElement(expense);
-                }
-                
-                updateStats();
-                JOptionPane.showMessageDialog(this, "Expenses loaded successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException | ClassNotFoundException e) {
-                JOptionPane.showMessageDialog(this, "Error loading file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        ArrayList<Expense> loaded = ExpenseStorage.load(this);
+        if (loaded != null) {
+            expenses.clear();
+            listModel.clear();
+            expenses.addAll(loaded);
+            for (Expense e : loaded) listModel.addElement(e);
+            updateStats();
+            categoryPanel.updateSummary(expenses);
         }
     }
 
@@ -185,19 +122,13 @@ public class ExpenseTrackerGUI extends JFrame {
         }
 
         double total = 0;
-        for (Expense e : expenses) {
-            total += e.amount;
-        }
-
-        double average = total / expenses.size();
+        for (Expense e : expenses) total += e.amount;
 
         totalLabel.setText("Total: " + String.format("%.2f", total));
-        averageLabel.setText("Average: " + String.format("%.2f", average));
+        averageLabel.setText("Average: " + String.format("%.2f", total / expenses.size()));
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new ExpenseTrackerGUI().setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new ExpenseTrackerGUI().setVisible(true));
     }
 }
