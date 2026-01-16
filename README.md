@@ -1,18 +1,29 @@
-## Getting Started
+# Personal Expense Tracker (Java Swing)
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+A simple Java desktop application for managing personal expenses using a graphical user interface built with Java Swing.
 
-## Folder Structure
+This project was developed as a team-based Java application and focuses on clean structure, basic object-oriented programming principles, and user-friendly interaction.
 
-The workspace contains two folders by default, where:
+---
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+## Features
+- Add new expenses (category, amount, note)
+- View all expenses in a list
+- Delete selected expenses
+- Automatically calculate:
+  - Total expenses
+  - Average expense
+- Input validation for incorrect values
+- Graphical desktop interface (no terminal)
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+---
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+## Technologies Used
+- Java
+- Java Swing
+- Collections (ArrayList)
+- VS Code
 
-## Dependency Management
+---
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+## Project Structure
