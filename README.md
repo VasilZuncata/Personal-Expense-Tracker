@@ -46,8 +46,15 @@ The project was developed as a **team-based Java application**, focusing on clea
 
 1. Make sure Java (version 11 or newer) is installed
 2. Open the project in VS Code
-3. Run the `ExpenseTrackerGUI.java` file
-4. The application window will open
+3. Configure the FlatLaf library:
+
+   * Open **Java: Configure Classpath** 
+   * Go to **Libraries**
+   * Select **Add Library**
+   * Navigate to the project **lib** folder
+   * Add the **FlatLaf `.jar` file**
+4. Run the `ExpenseTrackerGUI.java` file
+5. The application window will open
 
 ---
 
@@ -55,12 +62,9 @@ The project was developed as a **team-based Java application**, focusing on clea
 
 * The application runs locally
 * No database or external services are required
+* FlatLaf is included as an external library via the project classpath
 * Designed for educational and academic purposes
-
 ---
-
 ## Conclusion
 
-This project demonstrates a well-structured Java Swing desktop application with persistent storage, basic data analysis, and a modern user interface using FlatLaf.
-
-This project demonstrates a well-structured Java Swing desktop application with persistent storage, basic data analysis, and a modern user interface using FlatLaf.
+This projecdemonstrates a well-structured Java Swing desktop application with persistent storage, basic data analysis, and a modern user interface using FlatLaf.
